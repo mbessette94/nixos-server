@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, vars, ... }:
 {
   age.secrets.kopia-envfile = {
     file = ./secret.kopia.envfile.age;
@@ -19,11 +19,10 @@
 
   systemd.services.kopia-server = {
     description = "Kopia Backup Server";
-    after = [ "network.target" ];
 
     wantedBy = [ "multi-user.target" ];
     wants = [ "agenix.service" ];
-    after = [ "agenix.service" ];
+    after = [ "network.target" "agenix.service" ];
 
     environment = {
       HOME = "/var/lib/kopia";
@@ -40,7 +39,7 @@
       # Bind to 127.0.0.1 so it's only accessible via Traefik
       ExecStart = ''
         ${pkgs.kopia}/bin/kopia server start \
-          --address=127.0.0.1:51515 \
+          --address=127.0.0.1:${vars.ports.kopia-ui} \
           --ui \
           --insecure \
           --disable-csrf-token-checks

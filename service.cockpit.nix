@@ -1,8 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, vars, ... }:
 {
   services.cockpit = {
     enable = true;
-    port = 9090;
+    port = vars.ports.cockpit;
     plugins = with pkgs; [
       cockpit-podman
       cockpit-networkmanager

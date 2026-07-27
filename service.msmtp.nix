@@ -1,6 +1,6 @@
+{ config, pkgs, vars, ... }:
 {
-
-  agenix.secrets."msmtp-gmail-password" = ./secret.msmtp.gmail-password.age;
+  age.secrets."msmtp-gmail-password".file = ./secret.msmtp.gmail-password.age;
 
   programs.msmtp = {
     enable = true;

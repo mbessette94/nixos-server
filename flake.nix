@@ -25,10 +25,12 @@
   {
     nixosConfigurations.thiccdata = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      inherit specialArgs;
+      specialArgs = specialArgs // { inherit inputs; };
       modules = [
+        inputs.agenix.nixosModules.default
         ./configuration.nix
         ./barrel.services.nix
+        ./firewall.nix
       ];
     };
 

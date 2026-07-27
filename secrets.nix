@@ -1,5 +1,8 @@
-{ vars, ... }:
+# agenix rules file — evaluated by the `agenix` CLI with NO module args.
+# Keep it self-contained: import static values directly, no function header.
 let
+  vars = import ./variables.nix;
+
   # User Keys
   captain = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGoZKkKwvlgxtEQQXrvi4nr//SYFk+v8iGm0IUDT4psH";
   mbessette = vars.mbessetteSshPubKey;

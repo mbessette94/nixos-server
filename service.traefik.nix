@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, vars, ... }:
 {
   # Enable the Traefik service
   services.traefik = {
@@ -17,18 +17,29 @@
       ping = {};
 
       providers = {
-        docker = {
-          exposedByDefault = false;
-        };
+        # Static routes for non-container backends (LAN hosts like unifi,
+        # homeassistant, technitium) — router.*.yml symlinked into captain's
+        # home by home.captain.nix.
         file = {
           directory = "${config.users.users.captain.home}/.config/traefik/dynamic";
+          watch = true;
+        };
+
+        # Auto-discover containers on the `web` network by their Traefik labels.
+        # Reaches the podman API through the read-only socket-proxy, never the
+        # raw socket. exposedByDefault = false -> a container is only routed if
+        # it sets `traefik.enable=true`.
+        docker = {
+          endpoint = "tcp://127.0.0.1:2375";
+          network = "web";
+          exposedByDefault = false;
           watch = true;
         };
       };
 
       entryPoints = {
         web = {
-          address = ":80";
+          address = ":${vars.ports.traefik-http}";
           http = {
             redirections = {
               entryPoint = {
@@ -40,7 +51,7 @@
         };
 
         websecure = {
-          address = ":443";
+          address = ":${vars.ports.traefik-https}";
           transport = {
             respondingTimeouts = {
               readTimeout = "0s";
@@ -70,7 +81,7 @@
         myresolver = {
           acme = {
             storage = "${config.services.traefik.dataDir}/acme.json";
-            email = "blade30912@gmail.com";
+            email = vars.acmeEmail;
             dnsChallenge = {
               provider = "cloudflare";
               resolvers = [
@@ -84,6 +95,9 @@
     };
   };
 
-  # Open standard web ports in the firewall
-  networking.firewall.allowedTCPPorts = [ 80 443 ];
+  # Traefik's docker provider talks to the socket-proxy; make sure it's up first.
+  systemd.services.traefik = {
+    after = [ "podman-socket-proxy.service" ];
+    wants = [ "podman-socket-proxy.service" ];
+  };
 }

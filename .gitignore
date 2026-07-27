@@ -1,0 +1,9 @@
+# Nix build outputs
+result
+result-*
+
+# Editor / OS cruft
+*.swp
+.direnv/
+
+# NOTE: *.age files are encrypted and intentionally committed for agenix.
