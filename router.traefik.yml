@@ -1,0 +1,9 @@
+http:
+  routers:
+    traefik:
+      rule: "Host(\"traefik.thiccdata.io\")"
+      service: api@internal
+      middlewares:
+        - "internal-secure@file"
+      tls:
+        certresolver: myresolver

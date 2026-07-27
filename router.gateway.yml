@@ -1,0 +1,20 @@
+http:
+  routers:
+    gateway:
+      rule: "Host(\"gateway.thiccdata.io\")"
+      service: unifi
+      middlewares:
+        - "internal-secure@file"
+      entryPoints:
+        - websecure
+      tls:
+        certresolver: myresolver
+  serversTransports:
+    insecureTransport:
+      insecureSkipVerify: true # Skips SSL validation for the backend
+  services:
+    unifi:
+      loadbalancer:
+        servers:
+          - url: https://192.168.1.1
+        serversTransport: insecureTransport # Required because UDM uses self-signed certs

@@ -1,0 +1,41 @@
+http:
+  middlewares:
+    # --- UPDATED ALLOW LIST ---
+    fragment-internal-whitelist:
+      ipAllowList:
+        sourceRange:
+          - "127.0.0.1/32"       # Localhost
+          - "192.168.1.0/24"     # Main Local Network
+          - "192.168.2.0/24"     # Secondary/VLAN Network
+          - "192.168.3.45/32"    # Specific Static Device IP
+          - "192.168.3.1/32"
+          - "192.168.20.0/24"    # VPN
+
+    # --- SECURITY HEADERS ---
+    fragment-secure-headers:
+      headers:
+        sslRedirect: true
+        stsSeconds: 63072000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "same-origin"
+
+    # --- MODERN COMPRESSION ---
+    fragment-compression:
+      compress: {}
+
+    base-secure:
+      chain:
+        middlewares:
+          - fragment-compression
+          - fragment-secure-headers
+
+    internal-secure:
+      chain:
+        middlewares:
+          - base-secure
+          - fragment-internal-whitelist
