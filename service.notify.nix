@@ -27,10 +27,14 @@ let
   # Curated non-container system units to watch. These MUST already be defined
   # elsewhere in the config, or the module system would synthesize an empty,
   # ExecStart-less service. Add more unit names here as the stack grows.
+  # Note: cockpit is intentionally omitted — it's socket-activated and has no
+  # long-running `cockpit.service` unit to attach an OnFailure hook to.
   watchedSystemUnits = [
     "traefik"
     "kopia-server"
     "podman-networks"
+    "zfs-scrub"
+    "pocket-id"
   ];
 in
 {

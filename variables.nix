@@ -22,10 +22,22 @@ rec {
     dockerCidr
   ];
 
+  # Remote/LAN backend hosts fronted by Traefik. `gateway` and `dns` double as
+  # the host's default gateway and nameserver (see configuration.nix).
+  hosts = {
+    gateway = "192.168.1.1";        # UniFi UDM
+    dns = "192.168.1.200";          # Technitium DNS
+    homeAssistant = "192.168.3.45";
+    neko = "172.22.0.11";           # neko container on the `web` podman network
+  };
+
   # Permanent zfs paths
   ssdPool = "/mnt/thiccdata-ssd";
   hddPool = "/mnt/thiccdata-hdd";
   dockerZfsPool = "${ssdPool}/docker-data";
+  # Per-app persistent state (container volumes, etc.) — lives on the SSD pool so
+  # it's backed by ZFS. Single source of truth; modules append their own subdir.
+  appDataDir = "${ssdPool}/appdata";
 
   # User public keys
   mbessetteSshPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHC7FdwVyL71a2+7K9DFqNEiuvHO4eDh5ndS1tivimMi";
@@ -39,6 +51,7 @@ rec {
     ssh = 2222;
     cockpit = 9090;
     kopia-ui = 51515;
+    pocket-id = 1411;   # Pocket-ID OIDC provider (loopback -> Traefik)
     niko = "56000-56100";
     plex = [
       32400

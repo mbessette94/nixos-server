@@ -6,7 +6,9 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     home-manager = {
-      url = "github:nix-community/home-manager";
+      # Pin to the release branch that matches nixpkgs (nixos-26.05); tracking
+      # master drifts ahead of the 26.05 module API and can break switches.
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -16,15 +18,36 @@
     };
   };
 
-  outputs = { self, nixpkgs, ... }@inputs: 
+  outputs = { self, nixpkgs, ... }@inputs:
   let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+
     specialArgs = {
       vars = import ./variables.nix;
     };
   in
   {
+    # `nix fmt` — RFC-style formatter, applied tree-wide.
+    formatter.${system} = pkgs.nixfmt;
+
+    # `nix develop` — editor LSP + lint/format/secret tooling on PATH.
+    devShells.${system}.default = pkgs.mkShell {
+      packages = with pkgs; [
+        nixd    # Nix language server (LSP)
+        nixfmt  # formatter (same as `nix fmt`; RFC-style)
+        statix  # lint: anti-patterns / suggestions
+        deadnix # lint: dead/unused code
+        inputs.agenix.packages.${system}.default  # secret management
+        git
+      ];
+      shellHook = ''
+        echo "nixos-server dev shell — lint: 'statix check' / 'deadnix' ; format: 'nix fmt'"
+      '';
+    };
+
     nixosConfigurations.thiccdata = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
+      inherit system;
       specialArgs = specialArgs // { inherit inputs; };
       modules = [
         inputs.agenix.nixosModules.default
@@ -35,7 +58,7 @@
     };
 
     homeConfigurations.captain = inputs.home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      inherit pkgs;
       extraSpecialArgs = specialArgs // { inherit inputs; };
       modules = [
         ./home.captain.nix
@@ -43,7 +66,7 @@
     };
 
     homeConfigurations.mbessette = inputs.home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      inherit pkgs;
       extraSpecialArgs = specialArgs // { inherit inputs; };
       modules = [
         ./home.mbessette.nix

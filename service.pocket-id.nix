@@ -1,5 +1,5 @@
-{ config, pkgs, vars, ...}: {
-
+{ config, pkgs, vars, ... }:
+{
   age.secrets."secret.pocket-id.encryption-key".file = ./secret.pocket-id.encryption-key.age;
 
   services.pocket-id = {
@@ -14,7 +14,7 @@
     '';
 
     settings = {
-      APP_URL = "https://id.thiccdata.io";
+      APP_URL = "https://id.${vars.domain}";
       TRUST_PROXY = true;
     };
   };

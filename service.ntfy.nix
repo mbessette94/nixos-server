@@ -17,7 +17,7 @@
     extraOptions = [ "--network=web" ];
 
     volumes = [
-      "/mnt/storage/appdata/ntfy:/var/cache/ntfy"
+      "${vars.appDataDir}/ntfy:/var/cache/ntfy"
     ];
 
     environment = {
@@ -44,6 +44,6 @@
 
   # Persist ntfy's cache/attachments across container restarts.
   systemd.tmpfiles.rules = [
-    "d /mnt/storage/appdata/ntfy 0750 root root - -"
+    "d ${vars.appDataDir}/ntfy 0750 root root - -"
   ];
 }

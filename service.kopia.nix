@@ -6,7 +6,7 @@
     group = "root";
     mode = "0400";
   };
-  
+
   environment.systemPackages = [ pkgs.kopia ];
 
   users.users.kopia = {
@@ -35,11 +35,11 @@
       WorkingDirectory = "/var/lib/kopia";
 
       EnvironmentFile = config.age.secrets.kopia-envfile.path;
-      
+
       # Bind to 127.0.0.1 so it's only accessible via Traefik
       ExecStart = ''
         ${pkgs.kopia}/bin/kopia server start \
-          --address=127.0.0.1:${vars.ports.kopia-ui} \
+          --address=127.0.0.1:${toString vars.ports.kopia-ui} \
           --ui \
           --insecure \
           --disable-csrf-token-checks

@@ -1,10 +1,11 @@
+{ vars, ... }:
 {
   virtualisation.oci-containers.containers.portainer = {
     image = "portainer/portainer-ce:2.33.6-alpine";
     autoStart = true;
     volumes = [
-      "/var/run/podman/podman.sock:/var/run/docker.sock"
-      "/thiccdata-ssd/applications/portainer:/data" ## TODO
+      "/run/podman/podman.sock:/var/run/docker.sock"
+      "${vars.appDataDir}/portainer:/data"
     ];
     extraOptions = [
       "--privileged" # Allows Portainer proper host/socket access under Podman

@@ -1,6 +1,5 @@
-{ config, pkgs, lib, vars, ... }:
+{ config, vars, ... }:
 {
-  # Enable the Traefik service
   services.traefik = {
     enable = true;
 
@@ -8,27 +7,141 @@
       config.age.secrets."secret.traefik.cloudflare-api-token".path
     ];
 
-    # Traefik static configuration mapped directly from your YAML
+    # --- Dynamic config: routes for non-container backends --------------------
+    # Written directly here (served via the file provider the NixOS module wires
+    # up from dynamicConfigOptions). Replaces the old router.*.yml fragments.
+    # Container backends are still auto-discovered via the docker provider below.
+    dynamicConfigOptions.http = {
+      routers = {
+        # Traefik dashboard (internal API — no backend service).
+        traefik = {
+          rule = "Host(`traefik.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "api@internal";
+          middlewares = [ "internal-secure@file" ];
+          tls.certResolver = "myresolver";
+        };
+
+        # LAN backends (hosts managed outside this repo).
+        dns = {
+          rule = "Host(`dns.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "technitium";
+          middlewares = [ "internal-secure@file" ];
+          tls.certResolver = "myresolver";
+        };
+        gateway = {
+          rule = "Host(`gateway.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "unifi";
+          middlewares = [ "internal-secure@file" ];
+          tls.certResolver = "myresolver";
+        };
+        home = {
+          rule = "Host(`home.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "homeassistant";
+          middlewares = [ "internal-secure@file" ];
+          tls.certResolver = "myresolver";
+        };
+
+        # Host services on loopback.
+        manage = {
+          rule = "Host(`manage.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "cockpit";
+          middlewares = [ "internal-secure@file" ];
+          tls.certResolver = "myresolver";
+        };
+        id = {
+          rule = "Host(`id.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "pocket-id";
+          middlewares = [ "internal-secure@file" ];
+          tls.certResolver = "myresolver";
+        };
+
+        # neko/vbrowser: two routers (websocket + UI) sharing one backend
+        # service. Both carry the internal-secure allowlist.
+        neko-ui = {
+          rule = "Host(`vbrowser.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "neko";
+          middlewares = [ "internal-secure@file" ];
+          priority = 10;
+          tls.certResolver = "myresolver";
+        };
+        neko-ws = {
+          rule = "Host(`vbrowser.${vars.domain}`) && HeaderRegexp(`Upgrade`, `(?i)websocket`)";
+          entryPoints = [ "websecure" ];
+          service = "neko";
+          middlewares = [ "internal-secure@file" ];
+          priority = 100;
+          tls.certResolver = "myresolver";
+        };
+      };
+
+      services = {
+        technitium.loadBalancer.servers = [ { url = "http://${vars.hosts.dns}:5380"; } ];
+        homeassistant.loadBalancer.servers = [ { url = "http://${vars.hosts.homeAssistant}:8123"; } ];
+        cockpit.loadBalancer.servers = [ { url = "http://127.0.0.1:${toString vars.ports.cockpit}"; } ];
+        pocket-id.loadBalancer.servers = [ { url = "http://127.0.0.1:${toString vars.ports.pocket-id}"; } ];
+
+        # UniFi UDM serves a self-signed cert -> skip backend TLS verification.
+        unifi.loadBalancer = {
+          servers = [ { url = "https://${vars.hosts.gateway}"; } ];
+          serversTransport = "insecureTransport";
+        };
+        neko.loadBalancer = {
+          servers = [ { url = "http://${vars.hosts.neko}:8080"; } ];
+          responseForwarding.flushInterval = "100ms";
+        };
+      };
+
+      serversTransports.insecureTransport.insecureSkipVerify = true;
+
+      # Shared middlewares (ported from the old router.middlewares.yml).
+      middlewares = {
+        fragment-internal-whitelist.ipAllowList.sourceRange = [
+          "127.0.0.1/32" # Localhost
+          "192.168.1.0/24" # Main LAN
+          "192.168.2.0/24" # Secondary/VLAN
+          "192.168.3.45/32" # Specific static device
+          "192.168.3.1/32"
+          "192.168.20.0/24" # VPN
+        ];
+        fragment-secure-headers.headers = {
+          sslRedirect = true;
+          stsSeconds = 63072000;
+          stsIncludeSubdomains = true;
+          stsPreload = true;
+          forceSTSHeader = true;
+          frameDeny = true;
+          contentTypeNosniff = true;
+          browserXssFilter = true;
+          referrerPolicy = "same-origin";
+        };
+        fragment-compression.compress = { };
+        base-secure.chain.middlewares = [
+          "fragment-compression"
+          "fragment-secure-headers"
+        ];
+        internal-secure.chain.middlewares = [
+          "base-secure"
+          "fragment-internal-whitelist"
+        ];
+      };
+    };
+
+    # Traefik static configuration
     staticConfigOptions = {
       api = {
         dashboard = true;
       };
 
-      ping = {};
+      ping = { };
 
       providers = {
-        # Static routes for non-container backends (LAN hosts like unifi,
-        # homeassistant, technitium) — router.*.yml symlinked into captain's
-        # home by home.captain.nix.
-        file = {
-          directory = "${config.users.users.captain.home}/.config/traefik/dynamic";
-          watch = true;
-        };
-
-        # Auto-discover containers on the `web` network by their Traefik labels.
-        # Reaches the podman API through the read-only socket-proxy, never the
-        # raw socket. exposedByDefault = false -> a container is only routed if
-        # it sets `traefik.enable=true`.
         docker = {
           endpoint = "tcp://127.0.0.1:2375";
           network = "web";
@@ -39,7 +152,7 @@
 
       entryPoints = {
         web = {
-          address = ":${vars.ports.traefik-http}";
+          address = ":${toString vars.ports.traefik-http}";
           http = {
             redirections = {
               entryPoint = {
@@ -51,7 +164,7 @@
         };
 
         websecure = {
-          address = ":${vars.ports.traefik-https}";
+          address = ":${toString vars.ports.traefik-https}";
           transport = {
             respondingTimeouts = {
               readTimeout = "0s";
