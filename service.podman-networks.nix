@@ -49,5 +49,19 @@
         requires = [ "podman-networks.service" ];
       })
       config.virtualisation.oci-containers.containers)
+
+    # Podman's netavark backend sets up its own iptables chains (NETAVARK_INPUT
+    # etc.) when networks/containers actually come up, which can happen after
+    # firewall.service has already inserted the nixos-fw jump into INPUT --
+    # observed in practice to leave INPUT missing "-A INPUT -j nixos-fw"
+    # entirely after a switch. Ordering firewall.service after every container
+    # (and podman-networks itself) makes its jump insertion happen last, so it
+    # always wins.
+    {
+      firewall.after =
+        [ "podman-networks.service" ]
+        ++ map (container: "${container.serviceName}.service")
+          (lib.attrValues config.virtualisation.oci-containers.containers);
+    }
   ];
 }

@@ -8,7 +8,7 @@
   services.pocket-id = {
     enable = true;
     credentials = {
-      ENCRYPTION_KEY_FILE = config.age.secrets."pocket-id.encryption-key".path;
+      ENCRYPTION_KEY = config.age.secrets."pocket-id.encryption-key".path;
     };
 
     environmentFile = pkgs.writeText "pocket-id.env" ''
