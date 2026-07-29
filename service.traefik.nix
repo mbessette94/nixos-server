@@ -1,6 +1,9 @@
 { config, vars, ... }:
 {
-  age.secrets."traefik.cloudflare-api-token".file = ./secret.traefik.cloudflare-api-token.age;
+  age.secrets."traefik.cloudflare-api-token" = {
+    file = ./secret.traefik.cloudflare-api-token.age;
+    owner = "traefik";
+  };
 
   services.traefik = {
     enable = true;

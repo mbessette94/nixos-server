@@ -1,11 +1,14 @@
 { config, pkgs, vars, ... }:
 {
-  age.secrets."secret.pocket-id.encryption-key".file = ./secret.pocket-id.encryption-key.age;
+  age.secrets."pocket-id.encryption-key" = {
+    file = ./secret.pocket-id.encryption-key.age;
+    owner = "pocket-id";
+  };
 
   services.pocket-id = {
     enable = true;
     credentials = {
-      ENCRYPTION_KEY = config.age.secrets."secret.pocket-id.encryption-key".path;
+      ENCRYPTION_KEY_FILE = config.age.secrets."pocket-id.encryption-key".path;
     };
 
     environmentFile = pkgs.writeText "pocket-id.env" ''
