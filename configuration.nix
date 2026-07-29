@@ -116,10 +116,15 @@
   # useradd/passwd drift — the config is the source of truth.
   users.mutableUsers = false;
 
+  # Shared admin group for service data dirs under /thiccdata-ssd/applications/*.
+  # Each per-service tmpfiles rule sets owner=<service-user>, group=captain, so
+  # captain + mbessette can read/write app data without root.
+  users.groups.captain = { };
+
   users.users.mbessette = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" ]; # sudo — mbessette is the SSH-reachable admin
+    extraGroups = [ "wheel" "captain" ]; # sudo — mbessette is the SSH-reachable admin
     hashedPasswordFile = config.age.secrets."mbessette-password".path;
     openssh.authorizedKeys.keys = [
       vars.mbessetteSshPubKey
@@ -130,7 +135,7 @@
     isNormalUser = true;
     shell = pkgs.zsh;
     hashedPasswordFile = config.age.secrets."captain-password".path;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "captain" ];
 
     # Crucial for Rootless Podman UID mapping:
     subUidRanges = [

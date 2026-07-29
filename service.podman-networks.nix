@@ -43,25 +43,15 @@
     # The unit name is read from the module itself (`serviceName`, which defaults
     # to "<backend>-<name>") rather than hardcoded, so this keeps working if the
     # backend changes, a container is renamed, or new containers are added.
+    # NOTE: restrictedPorts (firewall.nix) only governs host-level services --
+    # it does not cover ports a container publishes itself (`ports = [...]`
+    # on an oci-container). Podman's netavark backend manages those in its
+    # own nftables table, independent of the OS firewall's posture.
     (lib.mapAttrs'
       (name: container: lib.nameValuePair container.serviceName {
         after = [ "podman-networks.service" ];
         requires = [ "podman-networks.service" ];
       })
       config.virtualisation.oci-containers.containers)
-
-    # Podman's netavark backend sets up its own iptables chains (NETAVARK_INPUT
-    # etc.) when networks/containers actually come up, which can happen after
-    # firewall.service has already inserted the nixos-fw jump into INPUT --
-    # observed in practice to leave INPUT missing "-A INPUT -j nixos-fw"
-    # entirely after a switch. Ordering firewall.service after every container
-    # (and podman-networks itself) makes its jump insertion happen last, so it
-    # always wins.
-    {
-      firewall.after =
-        [ "podman-networks.service" ]
-        ++ map (container: "${container.serviceName}.service")
-          (lib.attrValues config.virtualisation.oci-containers.containers);
-    }
   ];
 }

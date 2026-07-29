@@ -44,6 +44,6 @@
 
   # Persist ntfy's cache/attachments across container restarts.
   systemd.tmpfiles.rules = [
-    "d ${vars.appDataDir}/ntfy 0750 root root - -"
+    "d ${vars.appDataDir}/ntfy 0770 root captain - -"
   ];
 }

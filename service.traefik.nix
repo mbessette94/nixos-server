@@ -218,4 +218,8 @@
     after = [ "podman-socket-proxy.service" ];
     wants = [ "podman-socket-proxy.service" ];
   };
+
+  systemd.tmpfiles.rules = [
+    "z /thiccdata-ssd/infrastructure/traefik 0770 traefik captain - -"
+  ];
 }

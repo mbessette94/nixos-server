@@ -1,11 +1,14 @@
 { vars, ... }:
+let
+  dataDirectory = "${vars.appDataDir}/applications/portainer";
+in
 {
   virtualisation.oci-containers.containers.portainer = {
     image = "portainer/portainer-ce:2.33.6-alpine";
     autoStart = true;
     volumes = [
       "/run/podman/podman.sock:/var/run/docker.sock"
-      "${vars.appDataDir}/portainer:/data"
+      "${dataDirectory}:/data"
     ];
     extraOptions = [
       "--privileged" # Allows Portainer proper host/socket access under Podman
@@ -24,4 +27,8 @@
     after = [ "podman-networks.service" "podman.socket" ];
     requires = [ "podman-networks.service" "podman.socket" ];
   };
+
+  systemd.tmpfiles.rules = [
+    "z ${dataDirectory} 0770 root captain - -"
+  ];
 }
