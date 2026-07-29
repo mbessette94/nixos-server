@@ -1,9 +1,8 @@
-{
-  config,
-  inputs,
-  pkgs,
-  vars,
-  ...
+{ config
+, inputs
+, pkgs
+, vars
+, ...
 }:
 
 {
@@ -13,6 +12,21 @@
 
   ## System
   networking.hostName = vars.hostName;
+
+  ### Boot
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/boot";
+    fsType = "vfat";
+    options = [ "fmask=0077" "dmask=0077" ];
+  };
 
   ### ZFS
   networking.hostId = vars.hostId;
@@ -65,8 +79,8 @@
 
   ## Required secrets
   age.secrets = {
-    "secret.mbessette-password" = ./secret.mbessette-password.age;
-    "secret.captain-password" = ./secret.captain-password.age;
+    "mbessette-password".file = ./secret.mbessette-password.age;
+    "captain-password".file = ./secret.captain-password.age;
   };
 
   ## Base settings
@@ -103,7 +117,7 @@
   users.users.mbessette = {
     isNormalUser = true;
     extraGroups = [ "wheel" ]; # sudo — mbessette is the SSH-reachable admin
-    hashedPasswordFile = config.age.secrets."secret.mbessette-password".path;
+    hashedPasswordFile = config.age.secrets."mbessette-password".path;
     openssh.authorizedKeys.keys = [
       vars.mbessetteSshPubKey
     ];
@@ -111,7 +125,7 @@
 
   users.users.captain = {
     isNormalUser = true;
-    hashedPasswordFile = config.age.secrets."secret.captain-password".path;
+    hashedPasswordFile = config.age.secrets."captain-password".path;
     extraGroups = [ "wheel" ];
 
     # Crucial for Rootless Podman UID mapping:
@@ -130,7 +144,7 @@
 
     # Allow captain's background containers to auto-start at boot without logging in:
     autoSubUidGidRange = true;
-    lingering = true;
+    linger = true;
   };
 
   ## SSH
@@ -139,7 +153,7 @@
     ports = [ vars.ports.ssh ];
     settings = {
       PermitRootLogin = "no";
-      PasswordAuthentication = "no";
+      PasswordAuthentication = false;
       AllowUsers = [ "mbessette" ];
     };
   };

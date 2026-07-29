@@ -16,8 +16,8 @@ rec {
   hostId = "bf688067"; # ZFS host ID — migrating existing pools, so this must
   # stay as the value the pools were created under.
   net = {
-    wanInterface = "enp4s0"; # confirm via `ip link` — host's primary NIC
-    podmanInterface = "enp5s0"; # confirm via `ip link` — unmanaged, reserved for podman
+    wanInterface = "enp5s0"; # confirm via `ip link` — host's primary NIC
+    podmanInterface = "enp6s0"; # confirm via `ip link` — unmanaged, reserved for podman
   };
 
   # Alerting (ntfy)
@@ -51,7 +51,7 @@ rec {
   appDataDir = "${ssdPool}/appdata";
 
   # User public keys
-  mbessetteSshPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHC7FdwVyL71a2+7K9DFqNEiuvHO4eDh5ndS1tivimMi";
+  mbessetteSshPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILsZW38Ad1GAhGgfo7LsBzt6M4oo30VafsmNrILPMVio";
 
   ports = {
     gitea = 22;

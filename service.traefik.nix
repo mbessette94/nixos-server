@@ -3,8 +3,10 @@
   services.traefik = {
     enable = true;
 
+    age.secrets."traefik.cloudflare-api-token".file = ./secret.traefik.cloudflare-api-token.age;
+
     environmentFiles = [
-      config.age.secrets."secret.traefik.cloudflare-api-token".path
+      config.age.secrets."traefik.cloudflare-api-token".path
     ];
 
     # --- Dynamic config: routes for non-container backends --------------------
@@ -82,18 +84,18 @@
       };
 
       services = {
-        technitium.loadBalancer.servers = [ { url = "http://${vars.hosts.dns}:5380"; } ];
-        homeassistant.loadBalancer.servers = [ { url = "http://${vars.hosts.homeAssistant}:8123"; } ];
-        cockpit.loadBalancer.servers = [ { url = "http://127.0.0.1:${toString vars.ports.cockpit}"; } ];
-        pocket-id.loadBalancer.servers = [ { url = "http://127.0.0.1:${toString vars.ports.pocket-id}"; } ];
+        technitium.loadBalancer.servers = [{ url = "http://${vars.hosts.dns}:5380"; }];
+        homeassistant.loadBalancer.servers = [{ url = "http://${vars.hosts.homeAssistant}:8123"; }];
+        cockpit.loadBalancer.servers = [{ url = "http://127.0.0.1:${toString vars.ports.cockpit}"; }];
+        pocket-id.loadBalancer.servers = [{ url = "http://127.0.0.1:${toString vars.ports.pocket-id}"; }];
 
         # UniFi UDM serves a self-signed cert -> skip backend TLS verification.
         unifi.loadBalancer = {
-          servers = [ { url = "https://${vars.hosts.gateway}"; } ];
+          servers = [{ url = "https://${vars.hosts.gateway}"; }];
           serversTransport = "insecureTransport";
         };
         neko.loadBalancer = {
-          servers = [ { url = "http://${vars.hosts.neko}:8080"; } ];
+          servers = [{ url = "http://${vars.hosts.neko}:8080"; }];
           responseForwarding.flushInterval = "100ms";
         };
       };

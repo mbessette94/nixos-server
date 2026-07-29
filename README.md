@@ -69,8 +69,8 @@ running the install:
 
 ```sh
 mkdir -p /mnt/etc/ssh
-cp /path/to/backup/ssh_host_ed25519_key /mnt/etc/ssh/ssh_host_ed25519_key
-cp /path/to/backup/ssh_host_ed25519_key.pub /mnt/etc/ssh/ssh_host_ed25519_key.pub
+cp /mnt/thiccdata-ssd/keys/thiccdata_id_ed25519 /mnt/etc/ssh/ssh_host_ed25519_key
+cp /mnt/thiccdata-ssd/keys/thiccdata_id_ed25519.pub /mnt/etc/ssh/ssh_host_ed25519_key.pub
 chmod 600 /mnt/etc/ssh/ssh_host_ed25519_key
 ```
 
