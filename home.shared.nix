@@ -2,6 +2,7 @@
 
   home.packages = with pkgs; [
     ghostty.terminfo # Fix for errors over ssh
+    nerd-fonts.jetbrains-mono
   ];
 
   programs.zsh = {
@@ -17,10 +18,6 @@
       home-update = "home-manager switch --flake /nixos-server#$($USER)";
     };
   };
-
-  home.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-  ];
 
   programs.starship = {
     enable = true;
