@@ -24,6 +24,11 @@ in
       allowedCIDRs = [ localCidr ];
     };
 
+    smb = {
+      port = ports.smb;
+      allowedCIDRs = [ localCidr ];
+    };
+
     traefik-http = {
       port = ports.traefik-http;
     };

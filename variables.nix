@@ -39,7 +39,7 @@ rec {
     gateway = "192.168.1.1"; # UniFi UDM
     dns = "192.168.1.200"; # Technitium DNS
     homeAssistant = "192.168.3.45";
-    neko = "172.22.0.11"; # neko container on the `web` podman network
+    neko = "172.22.0.11"; # neko container on the `public-net` podman network
   };
 
   # Permanent zfs paths
@@ -60,6 +60,7 @@ rec {
     ntfy = 8090; # host loopback -> ntfy container; local publish endpoint
     ssh = 2222;
     cockpit = 9090;
+    smb = 445; # ZFS-managed SMB shares (camera-smb, media, roms)
     kopia-ui = 51515;
     pocket-id = 1411; # Pocket-ID OIDC provider (loopback -> Traefik)
     niko = "56000-56100";

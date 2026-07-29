@@ -146,7 +146,7 @@
       providers = {
         docker = {
           endpoint = "tcp://127.0.0.1:2375";
-          network = "web";
+          network = "public-net";
           exposedByDefault = false;
           watch = true;
         };

@@ -1,7 +1,7 @@
 { vars, ... }:
 {
   # ntfy: push-notification server. Two access paths:
-  #   * Browser / phone  -> https://${ntfyHost} via Traefik (web network, labels).
+  #   * Browser / phone  -> https://${ntfyHost} via Traefik (public-net network, labels).
   #   * Host alerts       -> http://127.0.0.1:<ntfy port> on loopback, so the
   #                          OnFailure hook (service.notify.nix) can publish
   #                          WITHOUT depending on Traefik/DNS/TLS being healthy.
@@ -13,8 +13,8 @@
     # Loopback-only publish endpoint for host-originated alerts.
     ports = [ "127.0.0.1:${toString vars.ports.ntfy}:80" ];
 
-    # Reachable by Traefik on the shared web network (see service.podman-networks.nix).
-    extraOptions = [ "--network=web" ];
+    # Reachable by Traefik on the shared public-net network (see service.podman-networks.nix).
+    extraOptions = [ "--network=public-net" ];
 
     volumes = [
       "${vars.appDataDir}/ntfy:/var/cache/ntfy"
