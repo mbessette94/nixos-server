@@ -1,4 +1,7 @@
 { vars, ... }:
+let
+  dataDirectory = "${vars.appDataDir}/applications/ntfy";
+in
 {
   # ntfy: push-notification server. Two access paths:
   #   * Browser / phone  -> https://${ntfyHost} via Traefik (public-net network, labels).
@@ -17,7 +20,7 @@
     extraOptions = [ "--network=public-net" ];
 
     volumes = [
-      "${vars.appDataDir}/ntfy:/var/cache/ntfy"
+      "${dataDirectory}:/var/cache/ntfy"
     ];
 
     environment = {
@@ -44,6 +47,6 @@
 
   # Persist ntfy's cache/attachments across container restarts.
   systemd.tmpfiles.rules = [
-    "d ${vars.appDataDir}/ntfy 0770 root captain - -"
+    "d ${dataDirectory} 0770 root captain - -"
   ];
 }

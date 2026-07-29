@@ -50,9 +50,12 @@
     options = [ "zfsutil" ];
   };
 
+  # Pool-root mountpoints -- 0755 so every service user (pocket-id, traefik, etc.)
+  # can traverse into its own dir underneath. Per-app dirs still enforce their own
+  # captain-group perms (0770).
   systemd.tmpfiles.rules = [
-    "d ${vars.ssdPool} 0750 captain captain - -"
-    "d ${vars.hddPool} 0750 captain captain - -"
+    "d ${vars.ssdPool} 0755 captain captain - -"
+    "d ${vars.hddPool} 0755 captain captain - -"
   ];
 
   ### Network hardware
