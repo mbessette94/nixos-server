@@ -1,9 +1,9 @@
 { config, vars, ... }:
 {
+  age.secrets."traefik.cloudflare-api-token".file = ./secret.traefik.cloudflare-api-token.age;
+
   services.traefik = {
     enable = true;
-
-    age.secrets."traefik.cloudflare-api-token".file = ./secret.traefik.cloudflare-api-token.age;
 
     environmentFiles = [
       config.age.secrets."traefik.cloudflare-api-token".path
