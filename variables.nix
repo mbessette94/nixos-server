@@ -43,8 +43,8 @@ rec {
   };
 
   # Permanent zfs paths
-  ssdPool = "/mnt/thiccdata-ssd";
-  hddPool = "/mnt/thiccdata-hdd";
+  ssdPool = "/thiccdata-ssd";
+  hddPool = "/thiccdata-hdd";
   dockerZfsPool = "${ssdPool}/docker-data";
   # Per-app persistent state (container volumes, etc.) — lives on the SSD pool so
   # it's backed by ZFS. Single source of truth; modules append their own subdir.
