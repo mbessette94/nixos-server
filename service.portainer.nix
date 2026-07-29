@@ -21,7 +21,7 @@
   };
 
   systemd.services.podman-portainer = {
-    after = [ "podman-networks.service" ];
-    requires = [ "podman-networks.service" ];
+    after = [ "podman-networks.service" "podman.socket" ];
+    requires = [ "podman-networks.service" "podman.socket" ];
   };
 }

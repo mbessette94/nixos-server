@@ -48,7 +48,7 @@ rec {
   dockerZfsPool = "${ssdPool}/docker-data";
   # Per-app persistent state (container volumes, etc.) — lives on the SSD pool so
   # it's backed by ZFS. Single source of truth; modules append their own subdir.
-  appDataDir = "${ssdPool}/appdata";
+  appDataDir = "${ssdPool}/applications";
 
   # User public keys
   mbessetteSshPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILsZW38Ad1GAhGgfo7LsBzt6M4oo30VafsmNrILPMVio";

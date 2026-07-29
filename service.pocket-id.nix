@@ -11,6 +11,8 @@
       ENCRYPTION_KEY = config.age.secrets."pocket-id.encryption-key".path;
     };
 
+    dataDir = "${vars.appDataDir}/pocket-id";
+
     environmentFile = pkgs.writeText "pocket-id.env" ''
       PORT=${toString vars.ports.pocket-id}
       HOST=127.0.0.1
