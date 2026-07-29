@@ -31,13 +31,18 @@ let
     };
   };
 
+  # This host's `networking.firewall` runs the classic iptables backend (not
+  # nftables), so rules have to be emitted as `iptables`/`ip6tables` commands
+  # via `extraCommands` -- `extraInputRules` is nftables-syntax-only and is
+  # silently a no-op on this backend.
   formatCidrRule = rule: cidr:
     let
-      family = if hasInfix ":" cidr then "ip6" else "ip";
-      # toString handles both integers (2222) and strings ("8000-8010") cleanly
-      portStr = toString rule.port; 
+      cmd = if hasInfix ":" cidr then "ip6tables" else "iptables";
+      # iptables port ranges use "start:end"; our option takes "start-end"
+      # (matching nftables' syntax) for a nicer-looking config value.
+      portStr = replaceStrings [ "-" ] [ ":" ] (toString rule.port);
     in
-      "${family} saddr ${cidr} ${rule.protocol} dport ${portStr} accept comment \"${rule.name}\"";
+      "${cmd} -A nixos-fw -p ${rule.protocol} -m ${rule.protocol} -s ${cidr} --dport ${portStr} -j nixos-fw-accept";
 
   formatRule = ruleName: rule:
     concatMapStringsSep "\n" (formatCidrRule rule) rule.allowedCIDRs;
@@ -50,7 +55,7 @@ in {
   };
 
   config = mkIf (cfg != { }) {
-    networking.firewall.extraInputRules = 
+    networking.firewall.extraCommands =
       concatMapStringsSep "\n" (ruleName: formatRule ruleName cfg.${ruleName}) (attrNames cfg);
   };
 }

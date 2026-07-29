@@ -155,6 +155,9 @@
   services.openssh = {
     enable = true;
     ports = [ vars.ports.ssh ];
+    # Don't let the openssh module blanket-open this port to the world --
+    # firewall.nix's restrictedPorts already opens it, restricted to localCidr.
+    openFirewall = false;
     settings = {
       PermitRootLogin = "no";
       PasswordAuthentication = false;
