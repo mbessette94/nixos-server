@@ -4,15 +4,25 @@
 # `rec` so entries can reference each other (allowedCidrs -> localCidr/dockerCidr).
 rec {
   # Host / domain
-  hostName = "thiccdata";
+  hostName = "deuterium";
   domain = "thiccdata.io";
 
   # ACME / notifications
   acmeEmail = "blade30912@gmail.com";
 
+  # --- Hardware / system-ID dependent -----------------------------------
+  # Can't be known until the physical box exists. Confirm/update these after
+  # running `nixos-generate-config` on the real hardware.
+  hostId = "bf688067"; # ZFS host ID — migrating existing pools, so this must
+  # stay as the value the pools were created under.
+  net = {
+    wanInterface = "enp4s0"; # confirm via `ip link` — host's primary NIC
+    podmanInterface = "enp5s0"; # confirm via `ip link` — unmanaged, reserved for podman
+  };
+
   # Alerting (ntfy)
-  ntfyHost = "ntfy.${domain}";   # https vhost served via Traefik
-  ntfyTopic = "server-alerts";   # topic the host publishes failure alerts to
+  ntfyHost = "ntfy.${domain}"; # https vhost served via Traefik
+  ntfyTopic = "server-alerts"; # topic the host publishes failure alerts to
 
   # Trusted internal networks (strings — bare a.b.c.d/n would be parsed as Nix paths)
   localCidr = "192.168.0.0/16";
@@ -25,10 +35,11 @@ rec {
   # Remote/LAN backend hosts fronted by Traefik. `gateway` and `dns` double as
   # the host's default gateway and nameserver (see configuration.nix).
   hosts = {
-    gateway = "192.168.1.1";        # UniFi UDM
-    dns = "192.168.1.200";          # Technitium DNS
+    self = "192.168.1.45"; # this host's own static LAN IP
+    gateway = "192.168.1.1"; # UniFi UDM
+    dns = "192.168.1.200"; # Technitium DNS
     homeAssistant = "192.168.3.45";
-    neko = "172.22.0.11";           # neko container on the `web` podman network
+    neko = "172.22.0.11"; # neko container on the `web` podman network
   };
 
   # Permanent zfs paths
@@ -46,12 +57,11 @@ rec {
     gitea = 22;
     traefik-http = 80;
     traefik-https = 443;
-    msmtp = 587;
-    ntfy = 8090;   # host loopback -> ntfy container; local publish endpoint
+    ntfy = 8090; # host loopback -> ntfy container; local publish endpoint
     ssh = 2222;
     cockpit = 9090;
     kopia-ui = 51515;
-    pocket-id = 1411;   # Pocket-ID OIDC provider (loopback -> Traefik)
+    pocket-id = 1411; # Pocket-ID OIDC provider (loopback -> Traefik)
     niko = "56000-56100";
     plex = [
       32400

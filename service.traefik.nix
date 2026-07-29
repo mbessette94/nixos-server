@@ -106,7 +106,7 @@
           "127.0.0.1/32" # Localhost
           "192.168.1.0/24" # Main LAN
           "192.168.2.0/24" # Secondary/VLAN
-          "192.168.3.45/32" # Specific static device
+          "${vars.hosts.homeAssistant}/32" # Specific static device
           "192.168.3.1/32"
           "192.168.20.0/24" # VPN
         ];
@@ -177,12 +177,12 @@
               certResolver = "myresolver";
               domains = [
                 {
-                  main = "thiccdata.io";
-                  sans = [ "*.thiccdata.io" ];
+                  main = vars.domain;
+                  sans = [ "*.${vars.domain}" ];
                 }
                 {
-                  main = "proxy.thiccdata.io";
-                  sans = [ "*.proxy.thiccdata.io" ];
+                  main = "proxy.${vars.domain}";
+                  sans = [ "*.proxy.${vars.domain}" ];
                 }
               ];
             };

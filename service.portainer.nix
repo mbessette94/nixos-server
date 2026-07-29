@@ -12,7 +12,7 @@
     ];
     labels = {
       "traefik.enable" = "true";
-      "traefik.http.routers.portainer.rule" = "Host(`portainer.thiccdata.io`)";
+      "traefik.http.routers.portainer.rule" = "Host(`portainer.${vars.domain}`)";
       "traefik.http.routers.portainer.entrypoints" = "websecure";
       "traefik.http.routers.portainer.tls.certresolver" = "myresolver";
       "traefik.http.routers.portainer.middlewares" = "internal-secure@file";

@@ -1,4 +1,10 @@
-{ config, inputs, pkgs, vars, ...}:
+{
+  config,
+  inputs,
+  pkgs,
+  vars,
+  ...
+}:
 
 {
   imports = [
@@ -6,8 +12,10 @@
   ];
 
   ## System
+  networking.hostName = vars.hostName;
+
   ### ZFS
-  networking.hostId = "bf688067";
+  networking.hostId = vars.hostId;
   boot.supportedFilesystems = [ "zfs" ];
   # Both pools are declared under `fileSystems` below (with zfsutil), so they're
   # imported by the mount units — no need for boot.zfs.extraPools too.
@@ -19,7 +27,7 @@
     device = "thiccdata";
     fsType = "zfs";
     # optional flags: "zfsutil" is required if zfs property is mountpoint=/thiccdata
-    options = [ "zfsutil" ]; 
+    options = [ "zfsutil" ];
   };
 
   fileSystems."${vars.ssdPool}" = {
@@ -40,21 +48,20 @@
     nameservers = [ vars.hosts.dns ];
 
     # 1. Host NIC -> Static IP for the NixOS host.
-    # NOTE: confirm 'enp4s0' matches the real interface name (`ip link`).
-    interfaces.enp4s0 = {
-      ipv4.addresses = [{
-        address = "192.168.1.45";
-        prefixLength = 24; # standard 255.255.255.0 netmask
-      }];
+    interfaces.${vars.net.wanInterface} = {
+      ipv4.addresses = [
+        {
+          address = vars.hosts.self;
+          prefixLength = 24; # standard 255.255.255.0 netmask
+        }
+      ];
     };
 
     # 2. Second NIC -> Unmanaged by the host (reserved for Podman/Docker).
     # Leaving it empty prevents NixOS from assigning an IP or gateway,
     # but keeps the physical link layer active.
-    # NOTE: confirm 'enp5s0' matches the real interface name (`ip link`).
-    interfaces.enp5s0 = { };
+    interfaces.${vars.net.podmanInterface} = { };
   };
-
 
   ## Required secrets
   age.secrets = {
@@ -63,7 +70,10 @@
   };
 
   ## Base settings
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   # Required. The release this host was first provisioned on — leave pinned even
   # as nixpkgs advances, so stateful defaults (e.g. DB versions) don't shift.
@@ -80,9 +90,9 @@
     wget
     curl
 
-    podman-tui     # Terminal UI to inspect containers
+    podman-tui # Terminal UI to inspect containers
     podman-compose # For multi-container deployments
-    dive           # Inspect container image layers
+    dive # Inspect container image layers
   ];
 
   ## Default users
@@ -105,9 +115,19 @@
     extraGroups = [ "wheel" ];
 
     # Crucial for Rootless Podman UID mapping:
-    subUidRanges = [{ startUid = 100000; count = 65536; }];
-    subGidRanges = [{ startGid = 100000; count = 65536; }];
-    
+    subUidRanges = [
+      {
+        startUid = 100000;
+        count = 65536;
+      }
+    ];
+    subGidRanges = [
+      {
+        startGid = 100000;
+        count = 65536;
+      }
+    ];
+
     # Allow captain's background containers to auto-start at boot without logging in:
     autoSubUidGidRange = true;
     lingering = true;
@@ -126,7 +146,7 @@
 
   ## Containerization
   virtualisation.containers.enable = true;
-  
+
   virtualisation.podman = {
     enable = true;
     dockerCompat = true; # Create a `docker` alias for podman, so drop-in commands work

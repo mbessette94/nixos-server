@@ -15,7 +15,7 @@ The repo is flat; organization is by **filename prefix**, not folders:
 | `flake.nix` | Flake entrypoint: the `thiccdata` NixOS system + two home-manager configs, plus `formatter` and `devShells`. |
 | `variables.nix` | Pure, argument-free attrset of shared static values (hostname, domain, CIDRs, ZFS paths, port map, pubkey). No `config`/`lib` deps. |
 | `barrel.services.nix` | Auto-importer: globs and imports **every** `service.*.nix`. Drop-in a new `service.foo.nix` and it's live. |
-| `service.*.nix` | One native/container service each (traefik, socket-proxy, podman-networks, portainer, kopia, msmtp, ntfy, notify, cockpit, pocket-id). |
+| `service.*.nix` | One native/container service each (traefik, socket-proxy, podman-networks, portainer, kopia, ntfy, notify, cockpit, pocket-id). |
 | `module.firewall.nix` + `firewall.nix` | Custom `networking.firewall.restrictedPorts` option + its rule data. |
 | `home.*.nix` | home-manager: `home.shared.nix` (zsh/starship/fonts, imported by both) + per-user `home.captain.nix` / `home.mbessette.nix`. |
 | `secret.*.age` + `secrets.nix` | agenix-encrypted secrets (intentionally committed) + the recipient rules file. |
@@ -54,6 +54,29 @@ bootable system on its own**. Regenerate it on the host and commit the result
 ```sh
 nixos-generate-config --show-hardware-config | sudo tee ~/nixos/hardware-configuration.nix
 ```
+
+## ⚠️ Restoring the host SSH key before first boot
+
+`secrets.nix` encrypts every secret to this host's SSH host key (the
+`ed25519` public key listed there under `systems`). That key pair was
+pre-generated and is stored on a separate drive — it must be restored to
+the target filesystem **before** the first `nixos-rebuild switch`/activation,
+or agenix won't be able to decrypt anything (passwords, Cloudflare token,
+etc.) and the boot will fail to bring up those services.
+
+During `nixos-install`, after mounting the target filesystem but before
+running the install:
+
+```sh
+mkdir -p /mnt/etc/ssh
+cp /path/to/backup/ssh_host_ed25519_key /mnt/etc/ssh/ssh_host_ed25519_key
+cp /path/to/backup/ssh_host_ed25519_key.pub /mnt/etc/ssh/ssh_host_ed25519_key.pub
+chmod 600 /mnt/etc/ssh/ssh_host_ed25519_key
+```
+
+(If instead you're already booted into a live NixOS install, copy to
+`/etc/ssh/` directly and `systemctl restart sshd` before the first
+`nixos-rebuild switch`, so agenix can decrypt on that very first activation.)
 
 ## Secrets (agenix)
 

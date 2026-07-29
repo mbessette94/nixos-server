@@ -19,7 +19,6 @@ let
     "secret.kopia.envfile.age"
     "secret.captain-password.age"
     "secret.mbessette-password.age"
-    "secret.msmtp.gmail-password.age"
   ];
 in
 builtins.listToAttrs (map (name: {

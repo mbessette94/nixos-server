@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ pkgs, vars, ... }: {
 
   programs.zsh = {
     enable = true;
@@ -9,7 +9,7 @@
     shellAliases = {
       ll = "ls -l";
       gst = "git status";
-      nix-update = "sudo nixos-rebuild switch --flake ~/nixos#thiccdata";
+      nix-update = "sudo nixos-rebuild switch --flake ~/nixos#${vars.hostName}";
     };
   };
 

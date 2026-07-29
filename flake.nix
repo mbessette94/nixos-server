@@ -18,59 +18,67 @@
     };
   };
 
-  outputs = { self, nixpkgs, ... }@inputs:
-  let
-    system = "x86_64-linux";
-    pkgs = nixpkgs.legacyPackages.${system};
-
-    specialArgs = {
+  outputs =
+    { self, nixpkgs, ... }@inputs:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
       vars = import ./variables.nix;
-    };
-  in
-  {
-    # `nix fmt` — RFC-style formatter, applied tree-wide.
-    formatter.${system} = pkgs.nixfmt;
 
-    # `nix develop` — editor LSP + lint/format/secret tooling on PATH.
-    devShells.${system}.default = pkgs.mkShell {
-      packages = with pkgs; [
-        nixd    # Nix language server (LSP)
-        nixfmt  # formatter (same as `nix fmt`; RFC-style)
-        statix  # lint: anti-patterns / suggestions
-        deadnix # lint: dead/unused code
-        inputs.agenix.packages.${system}.default  # secret management
-        git
-      ];
-      shellHook = ''
-        echo "nixos-server dev shell — lint: 'statix check' / 'deadnix' ; format: 'nix fmt'"
-      '';
-    };
+      specialArgs = {
+        inherit vars;
+      };
+    in
+    {
+      # `nix fmt` — RFC-style formatter, applied tree-wide.
+      formatter.${system} = pkgs.nixfmt;
 
-    nixosConfigurations.thiccdata = nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = specialArgs // { inherit inputs; };
-      modules = [
-        inputs.agenix.nixosModules.default
-        ./configuration.nix
-        ./barrel.services.nix
-        ./firewall.nix
-      ];
-    };
+      # `nix develop` — editor LSP + lint/format/secret tooling on PATH.
+      devShells.${system}.default = pkgs.mkShell {
+        packages = with pkgs; [
+          nixd # Nix language server (LSP)
+          nixfmt # formatter (same as `nix fmt`; RFC-style)
+          statix # lint: anti-patterns / suggestions
+          deadnix # lint: dead/unused code
+          inputs.agenix.packages.${system}.default # secret management
+          git
+        ];
+        shellHook = ''
+          echo "nixos-server dev shell — lint: 'statix check' / 'deadnix' ; format: 'nix fmt'"
+        '';
+      };
 
-    homeConfigurations.captain = inputs.home-manager.lib.homeManagerConfiguration {
-      inherit pkgs;
-      extraSpecialArgs = specialArgs // { inherit inputs; };
-      modules = [
-        ./home.captain.nix
-      ];
-    };
+      nixosConfigurations.${vars.hostName} = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = specialArgs // {
+          inherit inputs;
+        };
+        modules = [
+          inputs.agenix.nixosModules.default
+          ./configuration.nix
+          ./barrel.services.nix
+          ./firewall.nix
+        ];
+      };
 
-    homeConfigurations.mbessette = inputs.home-manager.lib.homeManagerConfiguration {
-      inherit pkgs;
-      extraSpecialArgs = specialArgs // { inherit inputs; };
-      modules = [
-        ./home.mbessette.nix
-      ];
+      homeConfigurations.captain = inputs.home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = specialArgs // {
+          inherit inputs;
+        };
+        modules = [
+          ./home.captain.nix
+        ];
+      };
+
+      homeConfigurations.mbessette = inputs.home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = specialArgs // {
+          inherit inputs;
+        };
+        modules = [
+          ./home.mbessette.nix
+        ];
+      };
     };
-  };
 }
