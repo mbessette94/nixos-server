@@ -1,5 +1,9 @@
 { pkgs, vars, ... }: {
 
+  home.packages = with pkgs; [
+    ghostty.terminfo # Fix for errors over ssh
+  ];
+
   programs.zsh = {
     enable = true;
     enableCompletion = true;
