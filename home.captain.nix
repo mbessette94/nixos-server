@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   imports = [
     ./home.shared.nix
@@ -6,6 +6,10 @@
 
   home.username = "captain";
   home.homeDirectory = "/home/captain";
+
+  home.packages = with pkgs; [
+    ghostty.terminfo # Fix for errors over ssh
+  ];
 
   programs.atuin = {
     enable = true;

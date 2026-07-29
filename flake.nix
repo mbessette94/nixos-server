@@ -17,10 +17,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixos-vscode-server.url = {
-      url = "github:nix-community/nixos-vscode-server";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixos-vscode-server.url = "github:nix-community/nixos-vscode-server";
   };
 
   outputs =
