@@ -16,10 +16,15 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixos-vscode-server.url = {
+      url = "github:nix-community/nixos-vscode-server";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { self, nixpkgs, ... }@inputs:
+    { nixpkgs, ... }@inputs:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -55,6 +60,7 @@
         };
         modules = [
           inputs.agenix.nixosModules.default
+          inputs.nixos-vscode-server.nixosModules.default
           ./configuration.nix
           ./barrel.services.nix
           ./firewall.nix

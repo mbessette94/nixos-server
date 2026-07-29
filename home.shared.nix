@@ -10,6 +10,7 @@
       ll = "ls -l";
       gst = "git status";
       nix-update = "sudo nixos-rebuild switch --flake ~/nixos#${vars.hostName}";
+      home-update = "home-manager switch --flake ~/nixos#$($USER)";
     };
   };
 

@@ -107,6 +107,7 @@
     podman-tui # Terminal UI to inspect containers
     podman-compose # For multi-container deployments
     dive # Inspect container image layers
+    home-manager
   ];
 
   ## Default users
@@ -116,6 +117,7 @@
 
   users.users.mbessette = {
     isNormalUser = true;
+    shell = pkgs.zsh;
     extraGroups = [ "wheel" ]; # sudo — mbessette is the SSH-reachable admin
     hashedPasswordFile = config.age.secrets."mbessette-password".path;
     openssh.authorizedKeys.keys = [
@@ -125,6 +127,7 @@
 
   users.users.captain = {
     isNormalUser = true;
+    shell = pkgs.zsh;
     hashedPasswordFile = config.age.secrets."captain-password".path;
     extraGroups = [ "wheel" ];
 
@@ -157,6 +160,9 @@
       AllowUsers = [ "mbessette" ];
     };
   };
+
+  ## VSCode Server
+  services.vscode-server.enable = true;
 
   ## Containerization
   virtualisation.containers.enable = true;
