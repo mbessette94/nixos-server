@@ -94,6 +94,7 @@
   system.stateVersion = "26.05";
 
   ## Global packages
+  programs.zsh.enable = true;
   environment.variables.EDITOR = "vim";
   environment.systemPackages = with pkgs; [
     inputs.agenix.packages.${pkgs.system}.default
