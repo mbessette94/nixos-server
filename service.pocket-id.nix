@@ -27,10 +27,10 @@ in
     };
   };
 
-  # pocket-id has no ZFS dataset of its own under /thiccdata-ssd/applications
-  # (unlike git/plex/portainer/postgres); the service's namespaced ExecStart
-  # fails hard if this doesn't exist. Owned by pocket-id + captain admin group.
-  systemd.tmpfiles.rules = [
-    "d ${config.services.pocket-id.dataDir} 0770 pocket-id captain - -"
-  ];
+  # NOTE: the upstream pocket-id module ships its own tmpfiles rule
+  # (`d ${cfg.dataDir} 0755 pocket-id pocket-id`) -- no override needed here.
+  # pocket-id v2 writes the DB, keys, and uploads under `${dataDir}/data/`,
+  # not directly in dataDir. `SQLITE_DB_PATH` is asserted out of the settings
+  # in v2 (see the module's v2 migration guide); relocate existing data into
+  # the `data/` subdir rather than trying to redirect the app.
 }

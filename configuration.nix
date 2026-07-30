@@ -12,6 +12,7 @@
 
   ## System
   networking.hostName = vars.hostName;
+  services.localtimed.enable = true;
 
   ### Boot
   boot.loader.systemd-boot.enable = true;
