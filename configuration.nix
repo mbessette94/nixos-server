@@ -119,6 +119,8 @@
     podman-compose # For multi-container deployments
     dive # Inspect container image layers
     home-manager
+    systemctl-tui
+    jq
   ];
 
   ## Default users
