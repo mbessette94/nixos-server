@@ -12,7 +12,13 @@
 
   ## System
   networking.hostName = vars.hostName;
-  services.localtimed.enable = true;
+
+  # Static timezone -- this box doesn't move, so no need for localtimed's
+  # geolocation-driven timezone (which requires GeoClue2 + location services
+  # and is intended for laptops). Change the value to your local zone; see
+  # `timedatectl list-timezones` for options. NTP time sync is handled by
+  # systemd-timesyncd, which NixOS enables by default.
+  time.timeZone = "America/New_York";
 
   ### Boot
   boot.loader.systemd-boot.enable = true;
