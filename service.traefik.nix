@@ -65,6 +65,13 @@
           middlewares = [ "internal-secure@file" ];
           tls.certResolver = "myresolver";
         };
+        kopia = {
+          rule = "Host(`kopia.${vars.domain}`)";
+          entryPoints = [ "websecure" ];
+          service = "kopia";
+          middlewares = [ "internal-secure@file" ];
+          tls.certResolver = "myresolver";
+        };
 
         # neko/vbrowser: two routers (websocket + UI) sharing one backend
         # service. Both carry the internal-secure allowlist.
@@ -91,6 +98,7 @@
         homeassistant.loadBalancer.servers = [{ url = "http://${vars.hosts.homeAssistant}:8123"; }];
         cockpit.loadBalancer.servers = [{ url = "http://127.0.0.1:${toString vars.ports.cockpit}"; }];
         pocket-id.loadBalancer.servers = [{ url = "http://127.0.0.1:${toString vars.ports.pocket-id}"; }];
+        kopia.loadBalancer.servers = [{ url = "http://127.0.0.1:${toString vars.ports.kopia-ui}"; }];
 
         # UniFi UDM serves a self-signed cert -> skip backend TLS verification.
         unifi.loadBalancer = {
