@@ -48,9 +48,13 @@ in
 
       EnvironmentFile = config.age.secrets.kopia-envfile.path;
 
-      # Bind to 127.0.0.1 so it's only accessible via Traefik
+      # Bind to 127.0.0.1 so it's only accessible via Traefik.
+      # --config-file points at the pre-existing repository.config from the
+      # prior system (default location is ~/.config/kopia/repository.config
+      # per XDG, but this repo migrated in with everything under `config/`).
       ExecStart = ''
         ${pkgs.kopia}/bin/kopia server start \
+          --config-file=${dataDirectory}/config/repository.config \
           --address=127.0.0.1:${toString vars.ports.kopia-ui} \
           --ui \
           --insecure \
