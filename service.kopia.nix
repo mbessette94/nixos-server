@@ -1,4 +1,7 @@
 { config, pkgs, vars, ... }:
+let
+  dataDirectory = "/thiccdata-ssd/kopia";
+in
 {
   age.secrets.kopia-envfile = {
     file = ./secret.kopia.envfile.age;
@@ -12,10 +15,19 @@
   users.users.kopia = {
     isSystemUser = true;
     group = "kopia";
-    home = "/var/lib/kopia";
-    createHome = true;
+    # dataDirectory is on ZFS and pre-exists; createHome=false so activation
+    # doesn't try to recreate/chown-clobber the existing state.
+    home = dataDirectory;
+    createHome = false;
   };
   users.groups.kopia = {};
+
+  # Adjust top-level ownership only (z, not Z -- do not recurse into existing
+  # kopia state, which is already correctly owned by whatever previously ran
+  # kopia there). captain admin group can read/write the config.
+  systemd.tmpfiles.rules = [
+    "z ${dataDirectory} 0770 kopia captain - -"
+  ];
 
   systemd.services.kopia-server = {
     description = "Kopia Backup Server";
@@ -25,14 +37,14 @@
     after = [ "network.target" "agenix.service" ];
 
     environment = {
-      HOME = "/var/lib/kopia";
+      HOME = dataDirectory;
     };
 
     serviceConfig = {
       Type = "simple";
       User = "kopia";
       Group = "kopia";
-      WorkingDirectory = "/var/lib/kopia";
+      WorkingDirectory = dataDirectory;
 
       EnvironmentFile = config.age.secrets.kopia-envfile.path;
 
@@ -50,7 +62,7 @@
 
       ProtectSystem = "full";
       ProtectHome = true;
-      ReadWritePaths = [ "/var/lib/kopia" ];
+      ReadWritePaths = [ dataDirectory ];
     };
   };
 
