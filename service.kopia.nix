@@ -15,6 +15,9 @@ in
   users.users.kopia = {
     isSystemUser = true;
     group = "kopia";
+    # Also in captain so it can traverse the shared admin group's paths
+    # (matches the pattern used for other service users under /thiccdata-ssd/*).
+    extraGroups = [ "captain" ];
     # dataDirectory is on ZFS and pre-exists; createHome=false so activation
     # doesn't try to recreate/chown-clobber the existing state.
     home = dataDirectory;
