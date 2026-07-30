@@ -121,6 +121,7 @@
     home-manager
     systemctl-tui
     jq
+    dig
   ];
 
   ## Default users

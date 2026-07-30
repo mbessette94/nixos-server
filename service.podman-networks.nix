@@ -3,16 +3,20 @@
   # Two shared podman networks that both Nix-declared containers and
   # Portainer-deployed containers attach to:
   #
-  #   public-net   -> Traefik-facing (public). Traefik's docker provider
-  #                   watches this network and routes to a container's IP
-  #                   on it.
-  #   private-net  -> --internal (no outbound internet). Backend-only
-  #                   traffic, e.g. app <-> database. aardvark-dns resolves
-  #                   container names within each network, so containers
-  #                   reach each other by name.
+  #   public-net   -> Traefik-facing. Traefik's docker provider watches this
+  #                   network and routes to a container's IP on it.
+  #   private-net  -> Backend traffic, e.g. app <-> database. aardvark-dns
+  #                   resolves container names within each network, so
+  #                   containers reach each other by name.
   #                   (Not just "private" -- newer Podman versions reserve
   #                   that exact name as a built-in --network mode keyword,
   #                   which collides with a network of the same name.)
+  #                   NOTE: intentionally NOT --internal. Netavark 1.x + podman
+  #                   5.x omit the netavark-table DNS-accept rule for internal
+  #                   networks, silently dropping aardvark-dns queries from
+  #                   containers on the internal bridge. Backend isolation
+  #                   comes from not publishing ports (`ports = [...]`) on the
+  #                   backend containers, not from --internal.
   #
   # A container that needs both (an app talking to a DB *and* exposed via
   # Traefik) simply attaches to both networks.
@@ -31,10 +35,8 @@
 
         path = [ pkgs.podman ];
         script = ''
-          podman network exists public-net \
-            || podman network create --subnet 172.22.0.0/24 public-net
-          podman network exists private-net \
-            || podman network create --internal --subnet 172.23.0.0/24 private-net
+          podman network create --ignore --subnet 172.22.0.0/24 public-net
+          podman network create --ignore --subnet 172.23.0.0/24 private-net
         '';
       };
     }
