@@ -12,6 +12,10 @@ in
     ];
     extraOptions = [
       "--privileged" # Allows Portainer proper host/socket access under Podman
+      # Traefik discovers backends via labels ONLY on the network named in
+      # `traefik.docker.network` (public-net). Without this attach, Portainer
+      # sits on the default `podman` network and Traefik 502s.
+      "--network=public-net"
     ];
     labels = {
       "traefik.enable" = "true";
