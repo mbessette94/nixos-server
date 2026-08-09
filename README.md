@@ -1,6 +1,6 @@
-# nixos-server (`thiccdata`)
+# nixos-server (`deuterium`)
 
-Declarative NixOS config for a single self-hosted home server (`thiccdata`,
+Declarative NixOS config for a single self-hosted home server (`deuterium`,
 `x86_64-linux`, `nixos-26.05`). Rootless-Podman containers behind Traefik with
 Cloudflare DNS-01 wildcard TLS, agenix-encrypted secrets, ZFS storage, Kopia
 backups, ntfy failure-alerting, and Pocket-ID OIDC.
@@ -12,10 +12,10 @@ The repo is flat; organization is by **filename prefix**, not folders:
 | Prefix | Purpose |
 |---|---|
 | `configuration.nix` | Main host module (ZFS, networking, users, SSH, Podman, base pkgs). |
-| `flake.nix` | Flake entrypoint: the `thiccdata` NixOS system + two home-manager configs, plus `formatter` and `devShells`. |
+| `flake.nix` | Flake entrypoint: the `deuterium` NixOS system + two home-manager configs, plus `formatter` and `devShells`. |
 | `variables.nix` | Pure, argument-free attrset of shared static values (hostname, domain, CIDRs, ZFS paths, port map, pubkey). No `config`/`lib` deps. |
 | `barrel.services.nix` | Auto-importer: globs and imports **every** `service.*.nix`. Drop-in a new `service.foo.nix` and it's live. |
-| `service.*.nix` | One native/container service each (traefik, socket-proxy, podman-networks, portainer, kopia, ntfy, notify, cockpit, pocket-id). |
+| `service.*.nix` | One native/container service each (traefik, socket-proxy, podman-networks, podman-storage, portainer, kopia, ntfy, notify, cockpit, pocket-id, opencloud). |
 | `module.firewall.nix` + `firewall.nix` | Custom `networking.firewall.restrictedPorts` option + its rule data. |
 | `home.*.nix` | home-manager: `home.shared.nix` (zsh/starship/fonts, imported by both) + per-user `home.captain.nix` / `home.mbessette.nix`. |
 | `secret.*.age` + `secrets.nix` | agenix-encrypted secrets (intentionally committed) + the recipient rules file. |
@@ -37,7 +37,7 @@ The flake is checked out at `~/nixos` on the host (in `captain`'s home).
 
 ```sh
 # System (run on the host):
-sudo nixos-rebuild switch --flake ~/nixos#thiccdata   # alias: `nix-update`
+sudo nixos-rebuild switch --flake ~/nixos#deuterium   # alias: `nix-update`
 
 # Home-manager (per user):
 home-manager switch --flake ~/nixos#captain

@@ -29,8 +29,12 @@ in
   # silently dropped by nixos-fw before it reaches aardvark. Symptom: every
   # `getent hosts <peer>` inside a container returns empty; `dig` from the
   # host works (because host-sourced packets don't come from a container CIDR).
+  # v6 mirrors the v4 rule above, for the IPv6 (ULA) subnets added to
+  # public-net/private-net in service.podman-networks.nix -- same
+  # nixos-fw-INPUT-drops-before-netavark-sees-it reasoning applies per-family.
   networking.firewall.extraInputRules = ''
     ip saddr { 172.22.0.0/24, 172.23.0.0/24, 10.88.0.0/16 } meta l4proto { tcp, udp } th dport 53 accept comment "podman container DNS to aardvark"
+    ip6 saddr { fd00:22::/64, fd00:23::/64 } meta l4proto { tcp, udp } th dport 53 accept comment "podman container DNS to aardvark (v6)"
   '';
 
   # Declaratively restrict ports to CIDRs!

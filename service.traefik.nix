@@ -122,6 +122,7 @@
           "${vars.hosts.homeAssistant}/32" # Specific static device
           "192.168.3.1/32"
           "192.168.20.0/24" # VPN
+          vars.dockerCidr # Container-originated server-to-server calls (e.g. OIDC token exchange)
         ];
         fragment-secure-headers.headers = {
           sslRedirect = true;

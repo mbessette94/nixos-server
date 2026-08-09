@@ -44,6 +44,9 @@
           deadnix # lint: dead/unused code
           inputs.agenix.packages.${system}.default # secret management
           git
+
+          rclone # Nextcloud -> OpenCloud file migration (scripts/migrate-nextcloud.sh)
+          vdirsyncer # Nextcloud -> OpenCloud CalDAV/CardDAV migration
         ];
         shellHook = ''
           echo "nixos-server dev shell — lint: 'statix check' / 'deadnix' ; format: 'nix fmt'"

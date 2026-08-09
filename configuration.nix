@@ -60,9 +60,19 @@
   # Pool-root mountpoints -- 0755 so every service user (pocket-id, traefik, etc.)
   # can traverse into its own dir underneath. Per-app dirs still enforce their own
   # captain-group perms (0770).
+  #
+  # Owner is root, NOT captain: systemd-tmpfiles refuses to create/adjust any path
+  # that requires walking through a directory owned by a non-root user whose child
+  # has a different owner ("Detected unsafe path transition" -- protects against a
+  # non-root owner swapping a subdirectory for a symlink before root operates on
+  # it). With captain as owner here, every rule reaching into a root-owned (or
+  # per-service-user-owned) child -- applications/, infrastructure/, portainer,
+  # traefik, even kopia's own mode -- was silently skipped. Root-owned ancestors
+  # are implicitly trusted, so this fixes the whole tree at once; captain still
+  # gets read/traverse via the group bit, same as before.
   systemd.tmpfiles.rules = [
-    "d ${vars.ssdPool} 0755 captain captain - -"
-    "d ${vars.hddPool} 0755 captain captain - -"
+    "d ${vars.ssdPool} 0755 root captain - -"
+    "d ${vars.hddPool} 0755 root captain - -"
   ];
 
   ### Network hardware
@@ -87,10 +97,20 @@
     interfaces.${vars.net.podmanInterface} = { };
   };
 
+  # IPv4 forwarding is enabled implicitly (podman/virtualisation modules need
+  # it for container networking). IPv6 forwarding is NOT enabled by default
+  # and was never turned on to match -- despite this host having real,
+  # globally-routable IPv6 (SLAAC) on both NICs. Without this, any container
+  # whose app resolves a dual-stack external host and attempts the AAAA/IPv6
+  # address first gets an immediate "Network unreachable" (see
+  # service.podman-networks.nix for the matching podman-network-side fix).
+  boot.kernel.sysctl."net.ipv6.conf.all.forwarding" = true;
+
   ## Required secrets
   age.secrets = {
     "mbessette-password".file = ./secret.mbessette-password.age;
     "captain-password".file = ./secret.captain-password.age;
+    "captain-u2f-keys".file = ./secret.captain-u2f-keys.age;
   };
 
   ## Base settings
@@ -123,6 +143,16 @@
     jq
     dig
   ];
+
+  # Git refuses to operate on a repo it doesn't own (CVE-2022-24765 mitigation),
+  # even when the non-owning user has group write access -- and /nixos-server is
+  # owned by mbessette but group-writable by captain (both run `nix-update`/
+  # `home-update` out of it). System-wide (not per-user) so it works for both
+  # accounts without needing matching personal git configs.
+  environment.etc.gitconfig.text = ''
+    [safe]
+        directory = /nixos-server
+  '';
 
   ## Default users
   # Accounts are fully declarative (hashedPasswordFile), so disallow out-of-band
@@ -167,6 +197,12 @@
     # Allow captain's background containers to auto-start at boot without logging in:
     autoSubUidGidRange = true;
     linger = true;
+
+    # FIDO2-backed SSH keys for captain's two YubiKeys -- not used for sshd
+    # login (captain is deliberately excluded from AllowUsers below), but
+    # read by security.pam.sshAgentAuth so `su - captain` can authenticate
+    # against a forwarded agent instead of a password. See variables.nix.
+    openssh.authorizedKeys.keys = vars.captainYubikeySshPubKeys;
   };
 
   ## SSH
@@ -177,11 +213,38 @@
     # firewall.nix's restrictedPorts already opens it, restricted to localCidr.
     openFirewall = false;
     settings = {
+      AllowAgentForwarding = "yes";
       PermitRootLogin = "no";
       PasswordAuthentication = false;
       AllowUsers = [ "mbessette" ];
     };
   };
+
+  ## YubiKey auth for captain
+  # Two independent credential types on the same two physical keys:
+  #  - console/getty login: raw U2F/CTAP via pam_u2f, key must be physically
+  #    plugged into this machine (see secret.captain-u2f-keys.age).
+  #  - `su - captain` from an mbessette SSH session: FIDO2 SSH key
+  #    (captainYubikeySshPubKeys above) checked against the agent forwarded
+  #    over SSH, so the key can stay on the remote client and never touch
+  #    this host. captain is intentionally never added to sshd's AllowUsers.
+  services.udev.packages = [ pkgs.libfido2 ];
+
+  security.pam.u2f = {
+    enable = true;
+    control = "sufficient"; # successful touch alone is enough -- no password fallback prompt
+    settings = {
+      cue = true; # print "please touch the device" while waiting
+      authfile = config.age.secrets."captain-u2f-keys".path;
+    };
+  };
+  security.pam.services.login.u2fAuth = true;
+
+  security.pam.sshAgentAuth = {
+    enable = true;
+    authorizedKeysFiles = [ "/etc/ssh/authorized_keys.d/%u" ]; # matches captain's declarative authorizedKeys.keys above
+  };
+  security.pam.services.su.sshAgentAuth = true;
 
   ## VSCode Server
   services.vscode-server.enable = true;

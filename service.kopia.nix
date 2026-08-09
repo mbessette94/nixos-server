@@ -1,6 +1,35 @@
-{ config, pkgs, vars, ... }:
+{ config, lib, pkgs, vars, ... }:
 let
   dataDirectory = "/thiccdata-ssd/kopia";
+
+  # --- Declarative snapshot-policy example (opt-in, inert until filled in) ---
+  # Recommended split from the storage-review pass (see plan history): back up
+  # small/irreplaceable data (photos, nextcloud, git, DBs, control-plane config);
+  # leave large/re-obtainable data (media, roms-archive, games, youtube) on the
+  # local ZFS HDD RAID only -- RAID already protects against drive failure, and
+  # Kopia's dedup engine gains little from ingesting multi-terabyte libraries.
+  # Populate these lists and this unit will apply them idempotently on every
+  # rebuild via `kopia policy set`. Left empty by default -- fill in deliberately.
+  backupPaths = [
+    # "/thiccdata/photos"
+    # "/thiccdata-ssd/nextcloud-data"
+    # "/thiccdata/nextcloud"
+    # "/thiccdata-ssd/applications/git"
+    # "/thiccdata/git-lfs"
+    # "/thiccdata-ssd/applications/postgres"
+    # "/thiccdata-ssd/db"
+    # "/thiccdata/postgres"
+    # "/thiccdata-ssd/infrastructure"
+    # "/thiccdata-ssd/applications/portainer"
+    # "/thiccdata-ssd/games/valheim"
+  ];
+  excludedPaths = [
+    # "/thiccdata/media"
+    # "/thiccdata/roms-archive"
+    # "/thiccdata-ssd/games"
+    # "/thiccdata/youtube"
+    # "/thiccdata/roms"
+  ];
 in
 {
   age.secrets.kopia-envfile = {
@@ -15,9 +44,6 @@ in
   users.users.kopia = {
     isSystemUser = true;
     group = "kopia";
-    # Also in captain so it can traverse the shared admin group's paths
-    # (matches the pattern used for other service users under /thiccdata-ssd/*).
-    extraGroups = [ "captain" ];
     # dataDirectory is on ZFS and pre-exists; createHome=false so activation
     # doesn't try to recreate/chown-clobber the existing state.
     home = dataDirectory;
@@ -74,4 +100,37 @@ in
   };
 
   # NO firewall rule needed for 51515! Traefik handles external ports (80/443).
+
+  # Applies backupPaths/excludedPaths above via `kopia policy set`, idempotently,
+  # on every rebuild + whenever kopia-server (re)starts. No-op while both lists
+  # are empty. Reuses kopia-server's own repository config/credentials.
+  systemd.services.kopia-policy-sync = lib.mkIf (backupPaths != [ ] || excludedPaths != [ ]) {
+    description = "Apply declared Kopia snapshot policies";
+
+    wantedBy = [ "multi-user.target" ];
+    after = [ "kopia-server.service" ];
+    wants = [ "kopia-server.service" ];
+
+    environment = {
+      HOME = dataDirectory;
+    };
+
+    serviceConfig = {
+      Type = "oneshot";
+      User = "kopia";
+      Group = "kopia";
+      WorkingDirectory = dataDirectory;
+      EnvironmentFile = config.age.secrets.kopia-envfile.path;
+    };
+
+    script =
+      let
+        kopiaArgs = "--config-file=${dataDirectory}/config/repository.config";
+        setInclude = path: ''${pkgs.kopia}/bin/kopia policy set ${kopiaArgs} "${path}"'';
+        setExclude = path: ''${pkgs.kopia}/bin/kopia policy set ${kopiaArgs} "${path}" --add-ignore="*"'';
+      in
+      lib.concatStringsSep "\n" (
+        map setInclude backupPaths ++ map setExclude excludedPaths
+      );
+  };
 }

@@ -52,6 +52,14 @@ rec {
 
   # User public keys
   mbessetteSshPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILsZW38Ad1GAhGgfo7LsBzt6M4oo30VafsmNrILPMVio";
+  # FIDO2-backed SSH keys for captain's two YubiKeys (`ssh-keygen -t ed25519-sk
+  # -O resident -O verify-required`), used by `security.pam.sshAgentAuth` so
+  # `su - captain` from an agent-forwarded mbessette session requires a touch
+  # on the key. Placeholders -- replace once the real keys are generated.
+  captainYubikeySshPubKeys = [
+    "sk-ssh-ed25519@openssh.com UkVQTEFDRU1FLVlVQklLRVktMS1QTEFDRUhPTERFUi1OT1QtQS1SRUFMLUtFWS0wMDAwMDA= captain-yubikey-1-PLACEHOLDER"
+    "sk-ssh-ed25519@openssh.com UkVQTEFDRU1FLVlVQklLRVktMi1QTEFDRUhPTERFUi1OT1QtQS1SRUFMLUtFWS0wMDAwMDA= captain-yubikey-2-PLACEHOLDER"
+  ];
 
   ports = {
     gitea = 22;

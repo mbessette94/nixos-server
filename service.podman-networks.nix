@@ -33,10 +33,17 @@
           RemainAfterExit = true;
         };
 
+        # IPv6 (ULA) subnets alongside the existing IPv4 ones so netavark sets
+        # up IPv6 masquerade/forwarding for these networks the same way it
+        # already does for IPv4 -- see configuration.nix for the matching
+        # net.ipv6.conf.all.forwarding sysctl. NOTE: `--ignore` no-ops if a
+        # network with this name already exists, so this does NOT
+        # retroactively add IPv6 to networks created before this change --
+        # see scripts/enable-podman-ipv6.sh for the one-time recreation step.
         path = [ pkgs.podman ];
         script = ''
-          podman network create --ignore --subnet 172.22.0.0/24 public-net
-          podman network create --ignore --subnet 172.23.0.0/24 private-net
+          podman network create --ignore --subnet 172.22.0.0/24 --subnet fd00:22::/64 --ipv6 public-net
+          podman network create --ignore --subnet 172.23.0.0/24 --subnet fd00:23::/64 --ipv6 private-net
         '';
       };
     }

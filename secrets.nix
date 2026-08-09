@@ -17,8 +17,10 @@ let
     "secret.pocket-id.encryption-key.age"
     "secret.traefik.cloudflare-api-token.age"
     "secret.kopia.envfile.age"
+    "secret.opencloud.oidc-client-secret.age"
     "secret.captain-password.age"
     "secret.mbessette-password.age"
+    "secret.captain-u2f-keys.age"
   ];
 in
 builtins.listToAttrs (map (name: {
