@@ -199,9 +199,10 @@
     linger = true;
 
     # FIDO2-backed SSH keys for captain's two YubiKeys -- not used for sshd
-    # login (captain is deliberately excluded from AllowUsers below), but
-    # read by security.pam.sshAgentAuth so `su - captain` can authenticate
-    # against a forwarded agent instead of a password. See variables.nix.
+    # login (captain is deliberately excluded from AllowUsers below). Was
+    # meant to be read by security.pam.sshAgentAuth so `su - captain` could
+    # authenticate against a forwarded agent, but that's disabled below for
+    # now (see comment there). See variables.nix.
     openssh.authorizedKeys.keys = vars.captainYubikeySshPubKeys;
   };
 
@@ -240,11 +241,18 @@
   };
   security.pam.services.login.u2fAuth = true;
 
-  security.pam.sshAgentAuth = {
-    enable = true;
-    authorizedKeysFiles = [ "/etc/ssh/authorized_keys.d/%u" ]; # matches captain's declarative authorizedKeys.keys above
-  };
-  security.pam.services.su.sshAgentAuth = true;
+  # Disabled for now: pam_ssh_agent_auth requires the agent socket to be
+  # owned by the target user (captain, uid 1000), but SSH agent forwarding
+  # always creates the socket owned by the connecting user (mbessette, uid
+  # 1001) -- so this can never authenticate, and its fatal() call on the uid
+  # mismatch kills `su` outright instead of falling through to the password
+  # prompt. Revisit with a root-owned relay socket (chowned to captain,
+  # proxying to the real forwarded socket) to satisfy the ownership check.
+  # security.pam.sshAgentAuth = {
+  #   enable = true;
+  #   authorizedKeysFiles = [ "/etc/ssh/authorized_keys.d/%u" ]; # matches captain's declarative authorizedKeys.keys above
+  # };
+  # security.pam.services.su.sshAgentAuth = true;
 
   ## VSCode Server
   services.vscode-server.enable = true;
